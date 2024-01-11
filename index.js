@@ -33,13 +33,15 @@ app.post('/',checkAuth, async (req,res)=>{
     try{
         const date = new Date()
         const time = date.getHours()+':'+date.getMinutes()
-        const namefriend = req.body.name
         const user = await Schema_user.findById({
             _id:req.userId
         })
+        const friend = await Schema_user.findOne({
+            number:req.body.number
+        })
         for (let i = 0;i<user.chats.length;i++){
             let chat = user.chats[i]
-            if(chat.name==req.body.name){
+            if(chat.name==req.body.number){
                 let cha = chat.sms
                 cha.push(req.body.sms)
                 chat.sms=cha
@@ -49,10 +51,26 @@ app.post('/',checkAuth, async (req,res)=>{
                 },{
                     chats:user.chats
                 })
-                return res.json('успешно')
             }
         }
-        res.json('пользователь не найден')
+        for (let i = 0;i<friend.chats.length;i++){
+            let chat = friend.chats[i]
+            if(chat.name==user.number){
+                let cha = chat.sms
+                cha.push(req.body.sms)
+                chat.sms=cha
+                friend.chats[i]=chat
+                await Schema_user.findOneAndUpdate({
+                    number:req.body.number
+                },{
+                    chats:friend.chats
+                })
+            }
+            return( res.json('успешно'))
+        }
+        res.json('ошибка')
+
+
         
         
     }catch(err){
@@ -74,18 +92,29 @@ app.post('/chat', checkAuth, async (req,res)=>{
     const user = await Schema_user.findById({
         _id:req.userId
     })
+    const friend = await Schema_user.findOne({
+        number:req.body.number
+    })
+    if(!friend) return res.status(100).json('Пользователя не существует')
     for(let i=0; i<user.chats.length;i++){
         let chat = user.chats[i]
         if(chat.name==req.body.name){
-            return res.json('Пользователь уже есть в чате')
+            return res.status(404).json('Пользователь уже есть в чате')
         }
     }
     let list = user.chats
-    list.push({name:req.body.name, sms:[]})
+    list.push({name:req.body.number, sms:[]})
+    let listfriend = friend.chats
+    listfriend.push({name:user.number, sms:[]})
     await Schema_user.findOneAndUpdate({
         _id:req.userId
     },{
         chats:list
+    })
+    await Schema_user.findByIdAndUpdate({
+        _id:friend._id
+    },{
+        chats:listfriend
     })
     const user2 = await Schema_user.findById({
         _id:req.userId
