@@ -32,7 +32,9 @@ app.post('/user', async (req,res)=>{
 app.post('/',checkAuth, async (req,res)=>{
     try{
         const date = new Date()
-        const time = date.getHours()+':'+date.getMinutes()
+        let min
+        date.getMinutes()<10?min='0'+date.getMinutes():min = date.getMinutes()
+        const time = `${date.getHours()}:${min}`
         const user = await Schema_user.findById({
             _id:req.userId
         })
@@ -43,7 +45,7 @@ app.post('/',checkAuth, async (req,res)=>{
             let chat = user.chats[i]
             if(chat.name==req.body.number){
                 let cha = chat.sms
-                cha.push(req.body.sms)
+                cha.push({sms:req.body.sms, time:time, name:user.number})
                 chat.sms=cha
                 user.chats[i]=chat
                 await Schema_user.findByIdAndUpdate({
@@ -57,7 +59,7 @@ app.post('/',checkAuth, async (req,res)=>{
             let chat = friend.chats[i]
             if(chat.name==user.number){
                 let cha = chat.sms
-                cha.push(req.body.sms)
+                cha.push({sms:req.body.sms, time:time, name:user.number})
                 chat.sms=cha
                 friend.chats[i]=chat
                 await Schema_user.findOneAndUpdate({
