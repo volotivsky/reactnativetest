@@ -68,7 +68,6 @@ app.post('/',checkAuth, async (req,res)=>{
                     chats:user.chats
                 })
             }
-            return( res.json('успешно'))
         }
         
         res.json('ошибка')
