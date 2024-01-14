@@ -41,20 +41,6 @@ app.post('/',checkAuth, async (req,res)=>{
         const friend = await Schema_user.findOne({
             number:req.body.number
         })
-        for (let i = 0;i<user.chats.length;i++){
-            let chat = user.chats[i]
-            if(chat.name==req.body.number){
-                let cha = chat.sms
-                cha.push({sms:req.body.sms, time:time, name:user.number})
-                chat.sms=cha
-                user.chats[i]=chat
-                await Schema_user.findByIdAndUpdate({
-                    _id:req.userId
-                },{
-                    chats:user.chats
-                })
-            }
-        }
         for (let i = 0;i<friend.chats.length;i++){
             let chat = friend.chats[i]
             if(chat.name==user.number){
@@ -68,8 +54,23 @@ app.post('/',checkAuth, async (req,res)=>{
                     chats:friend.chats
                 })
             }
+        }
+        for (let i = 0;i<user.chats.length;i++){
+            let chat = user.chats[i]
+            if(chat.name==req.body.number){
+                let cha = chat.sms
+                cha.push({sms:req.body.sms, time:time, name:user.number})
+                chat.sms=cha
+                user.chats[i]=chat
+                await Schema_user.findByIdAndUpdate({
+                    _id:req.userId
+                },{
+                    chats:user.chats
+                })
+            }
             return( res.json('успешно'))
         }
+        
         res.json('ошибка')
 
 
